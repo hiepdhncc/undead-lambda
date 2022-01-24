@@ -1,3 +1,4 @@
 const characterType = "character-type"; 
+const character = "character"; 
 
-module.exports = {characterType};
+module.exports = {characterType, character};
