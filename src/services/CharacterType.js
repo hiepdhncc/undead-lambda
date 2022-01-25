@@ -1,5 +1,6 @@
 const dynamo = require('../config/dynamo')
 const table = require('../constants/table');
+const { v4: uuid } = require('uuid');
 
 async function getCharacterType(characterTypeId) {
   const params = {
@@ -88,13 +89,18 @@ async function deleteCharacterType(characterTypeId) {
 async function saveCharacterType(requestBody){
   const params = {
     TableName: table.characterType,
-    Item: requestBody
+    Item: {
+      id: uuid(),
+      code: requestBody.code||'',
+      name: requestBody.name||'',
+      description: requestBody.description||'',
+    }
   };
   return await dynamo.put(params).promise().then(() => {
     const body = {
       Operation: 'SAVE',
       Message: 'SUCCESS',
-      Item: requestBody
+      Item: params.Item
     };
     return buildResponse(200, body);
   }, (error) => {

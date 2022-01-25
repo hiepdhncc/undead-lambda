@@ -1,18 +1,25 @@
-const dynamo = require('../config/dynamo')
-const table = require('../constants/table');
+const dynamo = require("../config/dynamo");
+const table = require("../constants/table");
+const { v4: uuid } = require("uuid");
 
 async function getCharacter(characterId) {
   const params = {
     TableName: table.character,
     Key: {
-      'id': characterId,
-    }
+      id: characterId,
+    },
   };
-  return await dynamo.get(params).promise().then((response) => {
-    return buildResponse(200, response.Item);
-  }, err => {
-    console.error('Err...: ', err);
-  });
+  return await dynamo
+    .get(params)
+    .promise()
+    .then(
+      (response) => {
+        return buildResponse(200, response.Item);
+      },
+      (err) => {
+        console.error("Err...: ", err);
+      }
+    );
 }
 
 async function scanDynamoRecords(scanParams, arrayItem) {
@@ -25,7 +32,7 @@ async function scanDynamoRecords(scanParams, arrayItem) {
     }
     return arrayItem;
   } catch (err) {
-    console.error('Err...: ', err);
+    console.error("Err...: ", err);
   }
 }
 
@@ -40,76 +47,118 @@ async function getCharacters() {
   return buildResponse(200, body);
 }
 
-
 async function modifyCharacter(characterId, updateKey, updateValue) {
   const params = {
     TableName: table.character,
     Key: {
-      'id': characterId
+      id: characterId,
     },
     UpdateExpression: `set ${updateKey} = :value`,
     ExpressionAttributeValues: {
-      ':value': updateValue
+      ":value": updateValue,
     },
-    ReturnValues: 'UPDATED_NEW'
+    ReturnValues: "UPDATED_NEW",
   };
-  return await dynamo.update(params).promise().then((response) => {
-    const body = {
-      Operation: 'UPDATE',
-      Message: 'SUCCESS',
-      UpdatedAttributes: response
-    };
-    return buildResponse(200, body);
-  }, (error) => {
-    console.error('Do your custom error handling here. I am just gonna log it: ', error);
-  });
+  return await dynamo
+    .update(params)
+    .promise()
+    .then(
+      (response) => {
+        const body = {
+          Operation: "UPDATE",
+          Message: "SUCCESS",
+          UpdatedAttributes: response,
+        };
+        return buildResponse(200, body);
+      },
+      (error) => {
+        console.error(
+          "Do your custom error handling here. I am just gonna log it: ",
+          error
+        );
+      }
+    );
 }
 
 async function deleteCharacter(characterId) {
   const params = {
     TableName: table.character,
     Key: {
-      'id': characterId
+      id: characterId,
     },
-    ReturnValues: 'ALL_OLD'
+    ReturnValues: "ALL_OLD",
   };
-  return await dynamo.delete(params).promise().then((response) => {
-    const body = {
-      Operation: 'DELETE',
-      Message: 'SUCCESS',
-      Item: response
-    };
-    return buildResponse(200, body);
-  }, (error) => {
-    console.error('Do your custom error handling here. I am just gonna log it: ', error);
-  });
+  return await dynamo
+    .delete(params)
+    .promise()
+    .then(
+      (response) => {
+        const body = {
+          Operation: "DELETE",
+          Message: "SUCCESS",
+          Item: response,
+        };
+        return buildResponse(200, body);
+      },
+      (error) => {
+        console.error(
+          "Do your custom error handling here. I am just gonna log it: ",
+          error
+        );
+      }
+    );
 }
 
-async function saveCharacter(requestBody){
+async function saveCharacter(requestBody) {
   const params = {
     TableName: table.character,
-    Item: requestBody
+    Item: {
+      id: uuid(),
+      character_type_id: requestBody.characterTypeId || "",
+      hp: parseInt(requestBody.hp) || 0,
+      armor: parseInt(requestBody.armor) || 0,
+      speed: parseFloat(requestBody) || 0.0,
+      crouch_speed: parseFloat(requestBody.crouchSpeed) || 0.0,
+      sprint_speed: parseFloat(requestBody.sprintSpeed) || 0.0,
+      cross_speed: parseFloat(requestBody.crossSpeed) || 0.0,
+      backward_speed: parseFloat(requestBody.backwardSpeed) || 0.0,
+    },
   };
-  return await dynamo.put(params).promise().then(() => {
-    const body = {
-      Operation: 'SAVE',
-      Message: 'SUCCESS',
-      Item: requestBody
-    };
-    return buildResponse(200, body);
-  }, (error) => {
-    console.error('Do your custom error handling here. I am just gonna log it: ', error);
-  });
+  return await dynamo
+    .put(params)
+    .promise()
+    .then(
+      () => {
+        const body = {
+          Operation: "SAVE",
+          Message: "SUCCESS",
+          Item: params.Item,
+        };
+        return buildResponse(200, body);
+      },
+      (error) => {
+        console.error(
+          "Do your custom error handling here. I am just gonna log it: ",
+          error
+        );
+      }
+    );
 }
 
 function buildResponse(statusCode, body) {
   return {
     statusCode,
     headers: {
-      'Content-Type': 'application/json'
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
   };
 }
 
-module.exports = {saveCharacter, deleteCharacter, getCharacter, getCharacters, modifyCharacter};
+module.exports = {
+  saveCharacter,
+  deleteCharacter,
+  getCharacter,
+  getCharacters,
+  modifyCharacter,
+};

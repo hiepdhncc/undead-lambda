@@ -1,5 +1,7 @@
 const dynamo = require('../config/dynamo')
 const table = require('../constants/table');
+const { v4: uuid } = require('uuid');
+
 
 async function getItem(itemId) {
   const params = {
@@ -88,13 +90,17 @@ async function deleteItem(itemId) {
 async function saveItem(requestBody){
   const params = {
     TableName: table.item,
-    Item: requestBody
+    Item: {
+      id: uuid(),
+      item_type_id: requestBody.itemTypeId||'',
+      description: requestBody.description||'',
+    }   
   };
   return await dynamo.put(params).promise().then(() => {
     const body = {
       Operation: 'SAVE',
       Message: 'SUCCESS',
-      Item: requestBody
+      Item: params.Item
     };
     return buildResponse(200, body);
   }, (error) => {
