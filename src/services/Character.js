@@ -1,6 +1,6 @@
-const dynamo = require("../config/dynamo");
-const table = require("../constants/table");
-const { v4: uuid } = require("uuid");
+const { v4: uuid } = require('uuid');
+const dynamo = require('../config/dynamo');
+const table = require('../constants/table');
 
 async function getCharacter(characterId) {
   const params = {
@@ -13,12 +13,10 @@ async function getCharacter(characterId) {
     .get(params)
     .promise()
     .then(
-      (response) => {
-        return buildResponse(200, response.Item);
-      },
+      (response) => buildResponse(200, response.Item),
       (err) => {
-        console.error("Err...: ", err);
-      }
+        console.error('Err...: ', err);
+      },
     );
 }
 
@@ -32,7 +30,7 @@ async function scanDynamoRecords(scanParams, arrayItem) {
     }
     return arrayItem;
   } catch (err) {
-    console.error("Err...: ", err);
+    console.error('Err...: ', err);
   }
 }
 
@@ -55,9 +53,9 @@ async function modifyCharacter(characterId, updateKey, updateValue) {
     },
     UpdateExpression: `set ${updateKey} = :value`,
     ExpressionAttributeValues: {
-      ":value": updateValue,
+      ':value': updateValue,
     },
-    ReturnValues: "UPDATED_NEW",
+    ReturnValues: 'UPDATED_NEW',
   };
   return await dynamo
     .update(params)
@@ -65,18 +63,18 @@ async function modifyCharacter(characterId, updateKey, updateValue) {
     .then(
       (response) => {
         const body = {
-          Operation: "UPDATE",
-          Message: "SUCCESS",
+          Operation: 'UPDATE',
+          Message: 'SUCCESS',
           UpdatedAttributes: response,
         };
         return buildResponse(200, body);
       },
       (error) => {
         console.error(
-          "Do your custom error handling here. I am just gonna log it: ",
-          error
+          'Do your custom error handling here. I am just gonna log it: ',
+          error,
         );
-      }
+      },
     );
 }
 
@@ -86,7 +84,7 @@ async function deleteCharacter(characterId) {
     Key: {
       id: characterId,
     },
-    ReturnValues: "ALL_OLD",
+    ReturnValues: 'ALL_OLD',
   };
   return await dynamo
     .delete(params)
@@ -94,18 +92,18 @@ async function deleteCharacter(characterId) {
     .then(
       (response) => {
         const body = {
-          Operation: "DELETE",
-          Message: "SUCCESS",
+          Operation: 'DELETE',
+          Message: 'SUCCESS',
           Item: response,
         };
         return buildResponse(200, body);
       },
       (error) => {
         console.error(
-          "Do your custom error handling here. I am just gonna log it: ",
-          error
+          'Do your custom error handling here. I am just gonna log it: ',
+          error,
         );
-      }
+      },
     );
 }
 
@@ -114,7 +112,7 @@ async function saveCharacter(requestBody) {
     TableName: table.character,
     Item: {
       id: uuid(),
-      character_type_id: requestBody.characterTypeId || "",
+      character_type_id: requestBody.characterTypeId || '',
       hp: parseInt(requestBody.hp) || 0,
       armor: parseInt(requestBody.armor) || 0,
       speed: parseFloat(requestBody) || 0.0,
@@ -130,18 +128,18 @@ async function saveCharacter(requestBody) {
     .then(
       () => {
         const body = {
-          Operation: "SAVE",
-          Message: "SUCCESS",
+          Operation: 'SAVE',
+          Message: 'SUCCESS',
           Item: params.Item,
         };
         return buildResponse(200, body);
       },
       (error) => {
         console.error(
-          "Do your custom error handling here. I am just gonna log it: ",
-          error
+          'Do your custom error handling here. I am just gonna log it: ',
+          error,
         );
-      }
+      },
     );
 }
 
@@ -149,7 +147,7 @@ function buildResponse(statusCode, body) {
   return {
     statusCode,
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
   };
