@@ -10,7 +10,11 @@ async function getCharacterType(characterTypeId) {
     }
   };
   return await dynamo.get(params).promise().then((response) => {
-    return buildResponse(200, response.Item);
+    const body = {
+      message: 'SUCCESS',
+      item: response,
+    };
+    return buildResponse(200, body);
   }, err => {
     console.error('Err...: ', err);
   });
@@ -36,6 +40,7 @@ async function getCharacterTypes() {
   };
   const allCharacterTypes = await scanDynamoRecords(params, []);
   const body = {
+    message :"SUCCESS",
     characterTypes: allCharacterTypes,
   };
   return buildResponse(200, body);
@@ -43,16 +48,23 @@ async function getCharacterTypes() {
 
 
 async function modifyCharacterType(characterTypeId, updateKey, updateValue) {
+// async function modifyCharacterType(characterTypeId, updateKey, updateValue) {
   const params = {
     TableName: table.characterType,
     Key: {
-      'id': characterTypeId
+      id: characterTypeId,
     },
     UpdateExpression: `set ${updateKey} = :value`,
     ExpressionAttributeValues: {
-      ':value': updateValue
+      ':value': updateValue,
     },
-    ReturnValues: 'UPDATED_NEW'
+    // UpdateExpression: `set ${requestBody.name} = :n ,${requestBody.code} = :c ,${requestBody.description} = :d ,`,
+    // ExpressionAttributeValues: {
+    //   ':n': { S: requestBody.name },
+    //   ':c': { S: requestBody.code },
+    //   ':d': { S: requestBody.description },
+    // },
+    ReturnValues: 'UPDATED_NEW',
   };
   return await dynamo.update(params).promise().then((response) => {
     const body = {
@@ -91,16 +103,17 @@ async function saveCharacterType(requestBody){
     TableName: table.characterType,
     Item: {
       id: uuid(),
-      code: requestBody.code||'',
       name: requestBody.name||'',
+      code: requestBody.code||'',
       description: requestBody.description||'',
     }
   };
+  console.log(params.Item);
   return await dynamo.put(params).promise().then(() => {
     const body = {
-      Operation: 'SAVE',
-      Message: 'SUCCESS',
-      Item: params.Item
+      operation: 'SAVE',
+      message: 'SUCCESS',
+      item: params.Item
     };
     return buildResponse(200, body);
   }, (error) => {
@@ -114,7 +127,8 @@ function buildResponse(statusCode, body) {
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(body),
+    message : body.message,
+    data: body,
   };
 }
 

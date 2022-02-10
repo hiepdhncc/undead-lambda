@@ -149,7 +149,7 @@ function buildResponse(statusCode, body) {
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(body),
+    data: body,
   };
 }
 
