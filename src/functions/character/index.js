@@ -43,11 +43,7 @@ exports.handler = async (event, context, callback) => {
       response = await characterTypeService.deleteCharacterType(body.data.id);
       break;
     case modifyCharacterType:
-      response = await characterTypeService.modifyCharacterType(
-        body.data.id,
-        body.data.updateKey,
-        body.data.updateValue
-      );
+      response = await characterTypeService.modifyCharacterType(body.data);
       break;
     case createCharacter:
       response = await characterService.saveCharacter(body.data);

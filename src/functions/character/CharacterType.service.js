@@ -1,8 +1,12 @@
 const dynamo = require('./dynamo.config');
 const table = require('./table.constant');
 const { v4: uuid } = require('uuid');
+const _ = require('lodash');
 
 async function getCharacterType(characterTypeId) {
+  let body = {
+    message: 'No item match!',
+  };
   const params = {
     TableName: table.characterType,
     Key: {
@@ -14,14 +18,18 @@ async function getCharacterType(characterTypeId) {
     .promise()
     .then(
       response => {
-        const body = {
+        if(_.isEmpty(response)){
+          return buildResponse(404, body);
+        }
+        body = {
           message: 'SUCCESS',
           item: response,
         };
         return buildResponse(200, body);
       },
       err => {
-        console.error('Err...: ', err);
+        body.message = err.message;
+        return buildResponse(400, body);
       }
     );
 }
@@ -41,34 +49,32 @@ async function scanDynamoRecords(scanParams, arrayItem) {
 }
 
 async function getCharacterTypes() {
+  let body = {
+    message: 'SUCCESS',
+    characterTypes : [],
+  };
   const params = {
     TableName: table.characterType,
   };
   const allCharacterTypes = await scanDynamoRecords(params, []);
-  const body = {
-    message: 'SUCCESS',
-    characterTypes: allCharacterTypes,
-  };
+  body.characterTypes = allCharacterTypes;
   return buildResponse(200, body);
 }
 
-async function modifyCharacterType(characterTypeId, updateKey, updateValue) {
-  // async function modifyCharacterType(characterTypeId, updateKey, updateValue) {
-  const params = {
+async function modifyCharacterType(requestBody) {
+  let body = {
+    message: 'SUCCESS'
+  };
+   const params = {
     TableName: table.characterType,
     Key: {
-      id: characterTypeId,
+      id: requestBody.id,
     },
-    UpdateExpression: `set ${updateKey} = :value`,
+    UpdateExpression: `set code = :c, description = :d`,
     ExpressionAttributeValues: {
-      ':value': updateValue,
+      ':c': requestBody.code,
+      ':d': requestBody.description,
     },
-    // UpdateExpression: `set ${requestBody.name} = :n ,${requestBody.code} = :c ,${requestBody.description} = :d ,`,
-    // ExpressionAttributeValues: {
-    //   ':n': { S: requestBody.name },
-    //   ':c': { S: requestBody.code },
-    //   ':d': { S: requestBody.description },
-    // },
     ReturnValues: 'UPDATED_NEW',
   };
   return await dynamo
@@ -76,20 +82,29 @@ async function modifyCharacterType(characterTypeId, updateKey, updateValue) {
     .promise()
     .then(
       response => {
-        const body = {
-          operation: 'UPDATE',
-          message: 'SUCCESS',
+        if(!response.Attributes){
+          body = {
+            message: 'Cannot modify item that does not exist!'
+          };
+          return buildResponse(404, body);
+        }
+        body =  {
+          message: "SUCCESS!",
           updatedAttributes: response,
         };
         return buildResponse(200, body);
       },
       error => {
-        console.error('Do your custom error handling here. I am just gonna log it: ', error);
+        body.message = error.message;
+        return buildResponse(400, body);
       }
     );
 }
 
 async function deleteCharacterType(characterTypeId) {
+  let body = {
+    message: 'SUCCESS',
+  };
   const params = {
     TableName: table.characterType,
     Key: {
@@ -102,20 +117,29 @@ async function deleteCharacterType(characterTypeId) {
     .promise()
     .then(
       response => {
-        const body = {
-          operation: 'DELETE',
+        if (!response.Attributes){
+          body = {
+            message: 'Cannot delete item that does not exist',
+          };
+          return buildResponse(404, body);
+        }
+        body = {
           message: 'SUCCESS',
           item: response,
         };
         return buildResponse(200, body);
       },
       error => {
-        console.error('Do your custom error handling here. I am just gonna log it: ', error);
+        body.message = error.message;
+        return buildResponse(400, body);
       }
     );
 }
 
 async function saveCharacterType(requestBody) {
+  let body = {
+    message: 'SUCCESS',
+  };
   const params = {
     TableName: table.characterType,
     Item: {
@@ -131,15 +155,15 @@ async function saveCharacterType(requestBody) {
     .promise()
     .then(
       () => {
-        const body = {
-          operation: 'SAVE',
+        body = {
           message: 'SUCCESS',
           item: params.Item,
         };
         return buildResponse(200, body);
       },
       error => {
-        console.error('Do your custom error handling here. I am just gonna log it: ', error);
+        body.message = error.message;
+        return buildResponse(400, body);
       }
     );
 }
@@ -150,7 +174,6 @@ function buildResponse(statusCode, body) {
     headers: {
       'Content-Type': 'application/json',
     },
-    message: body.message,
     data: body,
   };
 }
