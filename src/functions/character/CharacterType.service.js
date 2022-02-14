@@ -18,7 +18,7 @@ async function getCharacterType(characterTypeId) {
     .promise()
     .then(
       response => {
-        if(_.isEmpty(response)){
+        if (_.isEmpty(response)) {
           return buildResponse(404, body);
         }
         body = {
@@ -51,7 +51,7 @@ async function scanDynamoRecords(scanParams, arrayItem) {
 async function getCharacterTypes() {
   let body = {
     message: 'SUCCESS',
-    characterTypes : [],
+    characterTypes: [],
   };
   const params = {
     TableName: table.characterType,
@@ -61,20 +61,24 @@ async function getCharacterTypes() {
   return buildResponse(200, body);
 }
 
-async function modifyCharacterType(requestBody) {
+async function modifyCharacterType(characterTypeId, updateKey, updateValue) {
   let body = {
-    message: 'SUCCESS'
+    message: 'SUCCESS',
   };
-   const params = {
+  const params = {
     TableName: table.characterType,
     Key: {
-      id: requestBody.id,
+      id: characterTypeId,
     },
-    UpdateExpression: `set code = :c, description = :d`,
+    UpdateExpression: `set ${updateKey} = :value`,
     ExpressionAttributeValues: {
-      ':c': requestBody.code,
-      ':d': requestBody.description,
+      ':value': updateValue,
     },
+    // UpdateExpression: `set code = :c, description = :d`,
+    // ExpressionAttributeValues: {
+    //   ':c': requestBody.code,
+    //   ':d': requestBody.description,
+    // },
     ReturnValues: 'UPDATED_NEW',
   };
   return await dynamo
@@ -82,14 +86,14 @@ async function modifyCharacterType(requestBody) {
     .promise()
     .then(
       response => {
-        if(!response.Attributes){
+        if (!response.Attributes) {
           body = {
-            message: 'Cannot modify item that does not exist!'
+            message: 'Cannot modify item that does not exist!',
           };
           return buildResponse(404, body);
         }
-        body =  {
-          message: "SUCCESS!",
+        body = {
+          message: 'SUCCESS!',
           updatedAttributes: response,
         };
         return buildResponse(200, body);
@@ -103,7 +107,7 @@ async function modifyCharacterType(requestBody) {
 
 async function deleteCharacterType(characterTypeId) {
   let body = {
-    message: 'SUCCESS',
+    message: 'FAILED',
   };
   const params = {
     TableName: table.characterType,
@@ -117,7 +121,7 @@ async function deleteCharacterType(characterTypeId) {
     .promise()
     .then(
       response => {
-        if (!response.Attributes){
+        if (!response.Attributes) {
           body = {
             message: 'Cannot delete item that does not exist',
           };
