@@ -1,8 +1,12 @@
 const dynamo = require('./dynamo.config');
 const table = require('./table.constant');
 const { v4: uuid } = require('uuid');
+const _ = require('lodash');
 
 async function getResource(resourceId) {
+  let body = {
+    message: 'No item match!',
+  };
   const params = {
     TableName: table.resource,
     Key: {
@@ -14,10 +18,18 @@ async function getResource(resourceId) {
     .promise()
     .then(
       response => {
-        return buildResponse(200, response.item);
+        if (_.isEmpty(response)) {
+          return buildResponse(404, body);
+        }
+        body = {
+          message: 'SUCCESS',
+          item: response,
+        };
+        return buildResponse(200, body);
       },
       err => {
-        console.error('Err...: ', err);
+        body.message = err.message;
+        return buildResponse(400, body);
       }
     );
 }
@@ -37,17 +49,22 @@ async function scanDynamoRecords(scanParams, arrayItem) {
 }
 
 async function getResources() {
+  let body = {
+    message: 'SUCCESS',
+    resources: [],
+  };
   const params = {
     TableName: table.resource,
   };
   const allResources = await scanDynamoRecords(params, []);
-  const body = {
-    resources: allResources,
-  };
+  body.resources= allResources;
   return buildResponse(200, body);
 }
 
 async function modifyResource(resourceId, updateKey, updateValue) {
+  let body = {
+    message: 'FAILED',
+  };
   const params = {
     TableName: table.resource,
     Key: {
@@ -64,20 +81,29 @@ async function modifyResource(resourceId, updateKey, updateValue) {
     .promise()
     .then(
       response => {
-        const body = {
-          operation: 'UPDATE',
-          message: 'SUCCESS',
+        if (!response.Attributes) {
+          body = {
+            message: 'Cannot modify item that does not exist!',
+          };
+          return buildResponse(404, body);
+        }
+        body = {
+          message: 'SUCCESS!',
           updatedAttributes: response,
         };
         return buildResponse(200, body);
       },
       error => {
-        console.error('Do your custom error handling here. I am just gonna log it: ', error);
+        body.message = error.message;
+        return buildResponse(400, body);
       }
     );
 }
 
 async function deleteResource(resourceId) {
+  let body = {
+    message: 'FAILED',
+  };
   const params = {
     TableName: table.resource,
     Key: {
@@ -90,20 +116,29 @@ async function deleteResource(resourceId) {
     .promise()
     .then(
       response => {
-        const body = {
-          operation: 'DELETE',
+        if (!response.Attributes) {
+          body = {
+            message: 'Cannot delete item that does not exist',
+          };
+          return buildResponse(404, body);
+        }
+        body = {
           message: 'SUCCESS',
           item: response,
         };
         return buildResponse(200, body);
       },
       error => {
-        console.error('Do your custom error handling here. I am just gonna log it: ', error);
+        body.message = error.message;
+        return buildResponse(400, body);
       }
     );
 }
 
 async function saveResource(requestBody) {
+  let body = {
+    message: 'SUCCESS',
+  };
   const params = {
     TableName: table.resource,
     Item: {
@@ -119,15 +154,15 @@ async function saveResource(requestBody) {
     .promise()
     .then(
       () => {
-        const body = {
-          operation: 'SAVE',
+        body = {
           message: 'SUCCESS',
           item: params.Item,
         };
         return buildResponse(200, body);
       },
       error => {
-        console.error('Do your custom error handling here. I am just gonna log it: ', error);
+        body.message = error.message;
+        return buildResponse(400, body);
       }
     );
 }

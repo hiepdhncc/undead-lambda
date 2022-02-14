@@ -134,8 +134,16 @@ async function deleteUserCharacter(userCharacterId) {
 
 async function saveUserCharacter(requestBody) {
   let body = {
-    message: 'SUCCESS',
+    message: 'Failed',
   };
+  const character = await dynamo.get({
+    TableName: table.character,
+    Key: requestBody.characterId,
+  });
+  if (!character.Attributes) {
+    body.message = 'character is not exist!';
+    return buildResponse(400, body);
+  }
   const params = {
     TableName: table.userUserCharacter,
     Item: {

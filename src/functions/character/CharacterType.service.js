@@ -63,7 +63,7 @@ async function getCharacterTypes() {
 
 async function modifyCharacterType(characterTypeId, updateKey, updateValue) {
   let body = {
-    message: 'SUCCESS',
+    message: 'FAILED',
   };
   const params = {
     TableName: table.characterType,
@@ -142,7 +142,7 @@ async function deleteCharacterType(characterTypeId) {
 
 async function saveCharacterType(requestBody) {
   let body = {
-    message: 'SUCCESS',
+    message: 'Failed',
   };
   const params = {
     TableName: table.characterType,
@@ -150,6 +150,7 @@ async function saveCharacterType(requestBody) {
       id: uuid(),
       name: requestBody.name || '',
       code: requestBody.code || '',
+      code: requestBody.nickname || '',
       description: requestBody.description || '',
     },
   };

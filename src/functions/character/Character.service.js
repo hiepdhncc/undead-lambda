@@ -62,6 +62,9 @@ async function getCharacters() {
 }
 
 async function modifyCharacter(characterId, updateKey, updateValue) {
+  let body = {
+    message: 'FAILED',
+  };
   const params = {
     TableName: table.character,
     Key: {
@@ -136,6 +139,14 @@ async function saveCharacter(requestBody) {
   let body = {
     message: 'FAILED',
   };
+  const characterType = await dynamo.get({
+    TableName: table.characterType,
+    Key: requestBody.characterTypeId,
+  });
+  if (!characterType.Attributes){
+    body.message = 'characterType is not exist!';
+    return buildResponse(400, body);
+  } 
   const params = {
     TableName: table.character,
     Item: {
@@ -143,7 +154,7 @@ async function saveCharacter(requestBody) {
       character_type_id: requestBody.characterTypeId || '',
       hp: parseInt(requestBody.hp) || 0,
       armor: parseInt(requestBody.armor) || 0,
-      speed: parseFloat(requestBody) || 0.0,
+      speed: parseFloat(requestBody.speed) || 0.0,
       crouch_speed: parseFloat(requestBody.crouchSpeed) || 0.0,
       sprint_speed: parseFloat(requestBody.sprintSpeed) || 0.0,
       cross_speed: parseFloat(requestBody.crossSpeed) || 0.0,

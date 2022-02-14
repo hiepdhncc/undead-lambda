@@ -3,6 +3,9 @@ const table = require('./table.constant');
 const { v4: uuid } = require('uuid');
 
 async function getReward(rewardId) {
+  let body = {
+    message: 'No item match!',
+  };
   const params = {
     TableName: table.reward,
     Key: {
@@ -14,10 +17,18 @@ async function getReward(rewardId) {
     .promise()
     .then(
       response => {
-        return buildResponse(200, response.item);
+        if (_.isEmpty(response)) {
+          return buildResponse(404, body);
+        }
+        body = {
+          message: 'SUCCESS',
+          item: response,
+        };
+        return buildResponse(200, body);
       },
       err => {
-        console.error('Err...: ', err);
+        body.message = err.message;
+        return buildResponse(400, body);
       }
     );
 }
@@ -37,13 +48,15 @@ async function scanDynamoRecords(scanParams, arrayItem) {
 }
 
 async function getRewards() {
+  let body = {
+    message: 'SUCCESS',
+    rewards: [],
+  };
   const params = {
     TableName: table.reward,
   };
   const allRewards = await scanDynamoRecords(params, []);
-  const body = {
-    rewards: allRewards,
-  };
+  body.rewards = allRewards;
   return buildResponse(200, body);
 }
 
