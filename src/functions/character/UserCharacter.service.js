@@ -1,8 +1,12 @@
 const dynamo = require('./dynamo.config');
 const table = require('./table.constant');
 const { v4: uuid } = require('uuid');
+const _ = require('lodash');
 
 async function getUserCharacter(userCharacterId) {
+  let body = {
+    message: 'No item match!',
+  };
   const params = {
     TableName: table.userCharacter,
     Key: {
@@ -14,10 +18,18 @@ async function getUserCharacter(userCharacterId) {
     .promise()
     .then(
       response => {
-        return buildResponse(200, response.Item);
+        if (_.isEmpty(response)) {
+          return buildResponse(404, body);
+        }
+        body = {
+          message: 'SUCCESS',
+          item: response,
+        };
+        return buildResponse(200, body);
       },
       err => {
-        console.error('Err...: ', err);
+        body.message = err.message;
+        return buildResponse(400, body);
       }
     );
 }
@@ -37,13 +49,15 @@ async function scanDynamoRecords(scanParams, arrayItem) {
 }
 
 async function getUserCharacters() {
+  let body = {
+    message: 'SUCCESS',
+    characterTypes: [],
+  };
   const params = {
     TableName: table.userCharacter,
   };
   const allUserCharacters = await scanDynamoRecords(params, []);
-  const body = {
-    userCharacters: allUserCharacters,
-  };
+  body.userCharacters = allUserCharacters;
   return buildResponse(200, body);
 }
 
@@ -64,20 +78,29 @@ async function modifyUserCharacter(userCharacterId, updateKey, updateValue) {
     .promise()
     .then(
       response => {
-        const body = {
-          operation: 'UPDATE',
-          message: 'SUCCESS',
+        if (!response.Attributes) {
+          body = {
+            message: 'Cannot modify item that does not exist!',
+          };
+          return buildResponse(404, body);
+        }
+        body = {
+          message: 'SUCCESS!',
           updatedAttributes: response,
         };
         return buildResponse(200, body);
       },
       error => {
-        console.error('Do your custom error handling here. I am just gonna log it: ', error);
+        body.message = error.message;
+        return buildResponse(400, body);
       }
     );
 }
 
 async function deleteUserCharacter(userCharacterId) {
+  let body = {
+    message: 'FAILED',
+  };
   const params = {
     TableName: table.userCharacter,
     Key: {
@@ -90,20 +113,37 @@ async function deleteUserCharacter(userCharacterId) {
     .promise()
     .then(
       response => {
-        const body = {
-          operation: 'DELETE',
+        if (!response.Attributes) {
+          body = {
+            message: 'Cannot delete item that does not exist',
+          };
+          return buildResponse(404, body);
+        }
+        body = {
           message: 'SUCCESS',
           item: response,
         };
         return buildResponse(200, body);
       },
       error => {
-        console.error('Do your custom error handling here. I am just gonna log it: ', error);
+        body.message = error.message;
+        return buildResponse(400, body);
       }
     );
 }
 
 async function saveUserCharacter(requestBody) {
+  let body = {
+    message: 'Failed',
+  };
+  const character = await dynamo.get({
+    TableName: table.character,
+    Key: requestBody.characterId,
+  });
+  if (!character.Attributes) {
+    body.message = 'character is not exist!';
+    return buildResponse(400, body);
+  }
   const params = {
     TableName: table.userUserCharacter,
     Item: {
@@ -117,15 +157,15 @@ async function saveUserCharacter(requestBody) {
     .promise()
     .then(
       () => {
-        const body = {
-          operation: 'SAVE',
+        body = {
           message: 'SUCCESS',
           item: params.Item,
         };
         return buildResponse(200, body);
       },
       error => {
-        console.error('Do your custom error handling here. I am just gonna log it: ', error);
+        body.message = error.message;
+        return buildResponse(400, body);
       }
     );
 }

@@ -3,6 +3,9 @@ const table = require('./table.constant');
 const { v4: uuid } = require('uuid');
 
 async function getItemType(itemTypeId) {
+  let body = {
+    message: 'No item match!',
+  };
   const params = {
     TableName: table.itemType,
     Key: {
@@ -14,10 +17,18 @@ async function getItemType(itemTypeId) {
     .promise()
     .then(
       response => {
-        return buildResponse(200, response.item);
+        if (_.isEmpty(response)) {
+          return buildResponse(404, body);
+        }
+        body = {
+          message: 'SUCCESS',
+          item: response,
+        };
+        return buildResponse(200, body);
       },
       err => {
-        console.error('Err...: ', err);
+        body.message = err.message;
+        return buildResponse(400, body);
       }
     );
 }
@@ -37,17 +48,22 @@ async function scanDynamoRecords(scanParams, arrayItem) {
 }
 
 async function getItemTypes() {
+  let body = {
+    message: 'SUCCESS',
+    itemTypes: [],
+  };
   const params = {
     TableName: table.itemType,
   };
   const allItemTypes = await scanDynamoRecords(params, []);
-  const body = {
-    itemTypes: allItemTypes,
-  };
+  body.itemTypes= allItemTypes;
   return buildResponse(200, body);
 }
 
 async function modifyItemType(itemTypeId, updateKey, updateValue) {
+  let body = {
+    message: 'FAILED',
+  };
   const params = {
     TableName: table.itemType,
     Key: {
@@ -64,20 +80,29 @@ async function modifyItemType(itemTypeId, updateKey, updateValue) {
     .promise()
     .then(
       response => {
-        const body = {
-          operation: 'UPDATE',
-          message: 'SUCCESS',
+        if (!response.Attributes) {
+          body = {
+            message: 'Cannot modify item that does not exist!',
+          };
+          return buildResponse(404, body);
+        }
+        body = {
+          message: 'SUCCESS!',
           updatedAttributes: response,
         };
         return buildResponse(200, body);
       },
       error => {
-        console.error('Do your custom error handling here. I am just gonna log it: ', error);
+        body.message = error.message;
+        return buildResponse(400, body);
       }
     );
 }
 
 async function deleteItemType(itemTypeId) {
+  let body = {
+    message: 'FAILED',
+  };
   const params = {
     TableName: table.itemType,
     Key: {
@@ -90,20 +115,29 @@ async function deleteItemType(itemTypeId) {
     .promise()
     .then(
       response => {
-        const body = {
-          operation: 'DELETE',
+        if (!response.Attributes) {
+          body = {
+            message: 'Cannot delete item that does not exist',
+          };
+          return buildResponse(404, body);
+        }
+        body = {
           message: 'SUCCESS',
           item: response,
         };
         return buildResponse(200, body);
       },
       error => {
-        console.error('Do your custom error handling here. I am just gonna log it: ', error);
+        body.message = error.message;
+        return buildResponse(400, body);
       }
     );
 }
 
 async function saveItemType(requestBody) {
+  let body = {
+    message: 'SUCCESS',
+  };
   const params = {
     TableName: table.itemType,
     Item: {
@@ -118,15 +152,15 @@ async function saveItemType(requestBody) {
     .promise()
     .then(
       () => {
-        const body = {
-          operation: 'SAVE',
+        body = {
           message: 'SUCCESS',
           item: params.Item,
         };
         return buildResponse(200, body);
       },
       error => {
-        console.error('Do your custom error handling here. I am just gonna log it: ', error);
+        body.message = error.message;
+        return buildResponse(400, body);
       }
     );
 }

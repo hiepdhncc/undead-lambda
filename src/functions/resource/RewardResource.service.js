@@ -3,6 +3,9 @@ const table = require('./table.constant');
 const { v4: uuid } = require('uuid');
 
 async function getRewardResource(rewardResourceId) {
+  let body = {
+    message: 'No item match!',
+  };
   const params = {
     TableName: table.rewardResource,
     Key: {
@@ -14,10 +17,18 @@ async function getRewardResource(rewardResourceId) {
     .promise()
     .then(
       response => {
-        return buildResponse(200, response.item);
+        if (_.isEmpty(response)) {
+          return buildResponse(404, body);
+        }
+        body = {
+          message: 'SUCCESS',
+          item: response,
+        };
+        return buildResponse(200, body);
       },
       err => {
-        console.error('Err...: ', err);
+        body.message = err.message;
+        return buildResponse(400, body);
       }
     );
 }
@@ -37,17 +48,22 @@ async function scanDynamoRecords(scanParams, arrayItem) {
 }
 
 async function getRewardResources() {
+  let body = {
+    message: 'SUCCESS',
+    rewardResources: [],
+  };
   const params = {
     TableName: table.rewardResource,
   };
   const allRewardResources = await scanDynamoRecords(params, []);
-  const body = {
-    rewardResources: allRewardResources,
-  };
+  body.rewardResources = allRewardResources;
   return buildResponse(200, body);
 }
 
 async function modifyRewardResource(rewardResourceId, updateKey, updateValue) {
+  let body = {
+    message: 'FAILED',
+  };
   const params = {
     TableName: table.rewardResource,
     Key: {
@@ -64,20 +80,29 @@ async function modifyRewardResource(rewardResourceId, updateKey, updateValue) {
     .promise()
     .then(
       response => {
-        const body = {
-          operation: 'UPDATE',
-          message: 'SUCCESS',
+        if (!response.Attributes) {
+          body = {
+            message: 'Cannot modify item that does not exist!',
+          };
+          return buildResponse(404, body);
+        }
+        body = {
+          message: 'SUCCESS!',
           updatedAttributes: response,
         };
         return buildResponse(200, body);
       },
       error => {
-        console.error('Do your custom error handling here. I am just gonna log it: ', error);
+        body.message = error.message;
+        return buildResponse(400, body);
       }
     );
 }
 
 async function deleteRewardResource(rewardResourceId) {
+  let body = {
+    message: 'FAILED',
+  };
   const params = {
     TableName: table.rewardResource,
     Key: {
@@ -90,20 +115,29 @@ async function deleteRewardResource(rewardResourceId) {
     .promise()
     .then(
       response => {
-        const body = {
-          operation: 'DELETE',
+        if (!response.Attributes) {
+          body = {
+            message: 'Cannot delete item that does not exist',
+          };
+          return buildResponse(404, body);
+        }
+        body = {
           message: 'SUCCESS',
           item: response,
         };
         return buildResponse(200, body);
       },
       error => {
-        console.error('Do your custom error handling here. I am just gonna log it: ', error);
+        body.message = error.message;
+        return buildResponse(400, body);
       }
     );
 }
 
 async function saveRewardResource(requestBody) {
+  let body = {
+    message: 'SUCCESS',
+  };
   const params = {
     TableName: table.rewardResource,
     Item: {
@@ -118,15 +152,15 @@ async function saveRewardResource(requestBody) {
     .promise()
     .then(
       () => {
-        const body = {
-          operation: 'SAVE',
+        body = {
           message: 'SUCCESS',
           item: params.Item,
         };
         return buildResponse(200, body);
       },
       error => {
-        console.error('Do your custom error handling here. I am just gonna log it: ', error);
+        body.message = error.message;
+        return buildResponse(400, body);
       }
     );
 }
