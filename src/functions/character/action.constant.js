@@ -15,3 +15,4 @@ exports.findUserCharacter = 'findUserCharacter';
 exports.findAllUserCharacter = 'findAllUserCharacter';
 exports.deleteUserCharacter = 'deleteUserCharacter';
 exports.modifyUserCharacter = 'modifyUserCharacter';
+exports.test = 'test';
