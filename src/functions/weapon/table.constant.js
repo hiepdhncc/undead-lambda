@@ -3,11 +3,13 @@ const weapon = "weapon";
 const ammo = "ammo"; 
 const userWeapon = "user-weapon"; 
 const weaponLevel = "weapon-level"; 
+const skill = "weapon-skin"; 
 
 module.exports = {
   weapon,
   weaponLevel,
   weaponType,
   ammo,
-  userWeapon
+  userWeapon,
+  weaponSkin
 };
