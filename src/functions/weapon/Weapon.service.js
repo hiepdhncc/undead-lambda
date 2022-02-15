@@ -142,9 +142,12 @@ async function saveWeapon(requestBody) {
     TableName: table.weapon,
     Item: {
       id: uuid(),
+      code: requestBody.code || '',
+      name: requestBody.name || '',
       weapon_type_id: requestBody.weaponTypeId,
       code: requestBody.code || '',
       name: requestBody.name || '',
+      status: requestBody.status || 'LOCK',
       description: requestBody.description || '',
       fire_rate_type: requestBody.fireRateType || '',
       ammo_id: requestBody.ammo_id,
