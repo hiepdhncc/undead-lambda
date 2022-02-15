@@ -62,6 +62,9 @@ async function getUserCharacters() {
 }
 
 async function modifyUserCharacter(userCharacterId, updateKey, updateValue) {
+  let body = {
+    message: 'FAILED',
+  };
   const params = {
     TableName: table.userCharacter,
     Key: {
@@ -95,6 +98,22 @@ async function modifyUserCharacter(userCharacterId, updateKey, updateValue) {
         return buildResponse(400, body);
       }
     );
+}
+
+async function equipUserCharacter(userCharacterId) {
+  var params = {
+    TableName: table.userCharacter,
+    Key: {
+      "is_equipped": true
+    },
+    UpdateExpression: "set info.rating = :r",
+    ExpressionAttributeValues: {
+      ":r": false,
+    },
+    ReturnValues: "UPDATED_NEW"
+  };
+  await dynamo.update(params).promise();
+  return await modifyUserCharacter(userCharacterId, "is_equipped", true)
 }
 
 async function deleteUserCharacter(userCharacterId) {
@@ -150,6 +169,7 @@ async function saveUserCharacter(requestBody) {
       id: uuid(),
       user_id: requestBody.userId || '',
       character_id: requestBody.characterId || '',
+      is_equipped: false
     },
   };
   return await dynamo
@@ -186,4 +206,5 @@ module.exports = {
   getUserCharacter,
   getUserCharacters,
   modifyUserCharacter,
+  equipUserCharacter
 };

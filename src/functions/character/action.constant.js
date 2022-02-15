@@ -14,5 +14,6 @@ exports.createUserCharacter = 'createUserCharacter';
 exports.findUserCharacter = 'findUserCharacter';
 exports.findAllUserCharacter = 'findAllUserCharacter';
 exports.deleteUserCharacter = 'deleteUserCharacter';
+exports.equipUserCharacter = 'equipUserCharacter';
 exports.modifyUserCharacter = 'modifyUserCharacter';
 exports.test = 'test';

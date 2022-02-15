@@ -139,21 +139,25 @@ async function saveCharacter(requestBody) {
   let body = {
     message: 'FAILED',
   };
-  const characterType = await dynamo.get({
+  const param = {
     TableName: table.characterType,
-    Key: requestBody.characterTypeId,
-  });
-  if (!characterType.Attributes){
+    Key: {
+      id: requestBody.characterTypeId,
+    },
+  };
+  const characterType = await dynamo.get(param).promise();
+  console.log(typeof characterType);
+  if (!characterType) {
     body.message = 'characterType is not exist!';
     return buildResponse(400, body);
-  } 
+  }
   const params = {
     TableName: table.character,
     Item: {
       id: uuid(),
       character_type_id: requestBody.characterTypeId || '',
-      hp: parseInt(requestBody.hp) || 0,
-      armor: parseInt(requestBody.armor) || 0,
+      hp: parseInt(requestBody.hp) || 0.0,
+      armor: parseInt(requestBody.armor) || 0.0,
       speed: parseFloat(requestBody.speed) || 0.0,
       crouch_speed: parseFloat(requestBody.crouchSpeed) || 0.0,
       sprint_speed: parseFloat(requestBody.sprintSpeed) || 0.0,

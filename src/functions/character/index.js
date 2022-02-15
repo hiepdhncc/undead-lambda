@@ -14,6 +14,7 @@ const {
   findAllUserCharacter,
   deleteUserCharacter,
   modifyUserCharacter,
+  equipUserCharacter,
 } = require('./action.constant');
 
 const characterTypeService = require('./CharacterType.service');
@@ -81,6 +82,11 @@ exports.handler = async (event, context, callback) => {
         body.data.id,
         body.data.updateKey,
         body.data.updateValue
+      );
+      break;
+    case equipUserCharacter:
+      response = await userCharacterService.equipUserCharacter(
+        body.data.id
       );
       break;
   }
