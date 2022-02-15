@@ -19,6 +19,7 @@ const {
   modifyUsereapon,
   createUserWeapon,
   getAllWeaponOfUser,
+  getWeaponDetail,
 } = require('./action.constant');
 
 const weaponTypeService = require('./WaeponType.service');
@@ -115,6 +116,9 @@ exports.handler = async (event, context, callback) => {
       break;
     case getAllWeaponOfUser:
       response = await userWeaponService.getAllWeaponOfUser(body.data.userId);
+      break;
+    case getWeaponDetail:
+      response = await userWeaponService.getWeaponDetail(body.data.userId, body.data.weaponLevelId);
       break;
   }
   // if(event.httpMethod === 'GET' && event.path === 'userWeapons')

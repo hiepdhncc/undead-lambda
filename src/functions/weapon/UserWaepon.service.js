@@ -219,6 +219,55 @@ async function getAllWeaponOfUser(userId) {
   return buildResponse(200, body);
 }
 
+async function getWeaponDetail(userId, weaponLevelId) {
+  let body = {
+    message: 'Failed',
+  };
+  const userWeapon = await scanDynamoRecords(
+    {
+      TableName: table.userWeapon,
+      ScanFilter: {
+        user_id: {
+          AttributeValueList: { S: userId },
+          ComparisonOperator: 'EQ',
+        },
+        weapon_level_id: {
+          AttributeValueList: { S: weaponLevelId },
+          ComparisonOperator: 'EQ',
+        },
+      },
+    },
+    []
+  );
+  if (userWeapon.length === 0) return buildResponse(404, body);
+  const weaponLevel = await dynamo
+    .get({
+      TableName: table.weaponLevel,
+      Key: {
+        id: weaponLevelId,
+      },
+    })
+    .promise();
+  const wp = await dynamo
+    .get({
+      TableName: table.weapon,
+      Key: {
+        id: userWeapon[0].weapon_id,
+      },
+    })
+    .promise();
+  const weapon = {
+    progress: userWeapon.progress,
+    name: `${wp.name} - ${wp.code}`,
+    level: weaponLevel.level,
+  };
+  body = {
+    message: 'success',
+    weapon,
+  };
+  return buildResponse(200, body);
+}
+
 module.exports = {
   getAllWeaponOfUser,
   saveUserWeapon,
@@ -226,4 +275,5 @@ module.exports = {
   getUserWeapon,
   getUserWeapons,
   modifyUserWeapon,
+  getWeaponDetail,
 };
