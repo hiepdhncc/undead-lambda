@@ -150,7 +150,7 @@ async function saveCharacterType(requestBody) {
       id: uuid(),
       name: requestBody.name || '',
       code: requestBody.code || '',
-      code: requestBody.nickname || '',
+      nickname: requestBody.nickname || '',
       description: requestBody.description || '',
     },
   };
