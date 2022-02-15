@@ -3,7 +3,7 @@ const weapon = "weapon";
 const ammo = "ammo"; 
 const userWeapon = "user-weapon"; 
 const weaponLevel = "weapon-level"; 
-const skill = "weapon-skin"; 
+const weaponSkin = "weapon-skin"; 
 
 module.exports = {
   weapon,

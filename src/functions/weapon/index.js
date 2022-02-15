@@ -14,11 +14,17 @@ const {
   findAllWeaponLevel,
   deleteWeaponLevel,
   modifyWeaponLevel,
+  findUserWeapon,
+  deleteUserWeapon,
+  modifyUsereapon,
+  createUserWeapon,
+  getAllWeaponOfUser,
 } = require('./action.constant');
 
 const weaponTypeService = require('./WaeponType.service');
 const weaponService = require('./Weapon.service');
 const weaponLevelService = require('./WeaponLevel.service');
+const userWeaponService = require('./UserWaepon.service');
 
 console.log('Loading function');
 
@@ -88,6 +94,30 @@ exports.handler = async (event, context, callback) => {
         body.data.updateValue
       );
       break;
+    case createUserWeapon:
+      response = await userWeaponService.saveUserWeapon(body.data);
+      break;
+    case findUserWeapon:
+      response = await userWeaponService.getUserWeapon(body.data.id);
+      break;
+    case findUserWeapon:
+      response = await userWeaponService.getUserWeapons();
+      break;
+    case deleteUserWeapon:
+      response = await userWeaponService.deleteUserWeapon(body.data.id);
+      break;
+    case modifyUsereapon:
+      response = await userWeaponService.modifyUserWeapon(
+        body.data.id,
+        body.data.updateKey,
+        body.data.updateValue
+      );
+      break;
+    case getAllWeaponOfUser:
+      response = await userWeaponService.getAllWeaponOfUser(body.data.userId);
+      break;
   }
+  // if(event.httpMethod === 'GET' && event.path === 'userWeapons')
+  //   response = userWeaponService.getAllWeaponOfUser(event.queryStringParameters)
   return response;
 };

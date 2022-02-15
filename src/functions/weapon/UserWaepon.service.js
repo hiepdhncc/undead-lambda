@@ -183,7 +183,44 @@ function buildResponse(statusCode, body) {
   };
 }
 
+async function getAllWeaponOfUser(userId) {
+  let body = {
+    message: 'Failed',
+  };
+  let weapons = [];
+  const userWeapons = await scanDynamoRecords(
+    {
+      TableName: table.userWeapon,
+      ScanFilter: {
+        user_id: {
+          AttributeValueList: { S: userId },
+          ComparisonOperator: 'EQ',
+        },
+      },
+    },
+    []
+  );
+  for (let i = 0; i < userWeapons.length; i++) {
+    const weapon = await dynamo
+      .get({
+        TableName: table.weapon,
+        Key: {
+          id: userWeapons[i].weapon_id,
+        },
+      })
+      .promise();
+    console.log(weapon.Item, 'DD');
+    weapons.push(weapon.Item);
+  }
+  body = {
+    message: 'success',
+    weapons,
+  };
+  return buildResponse(200, body);
+}
+
 module.exports = {
+  getAllWeaponOfUser,
   saveUserWeapon,
   deleteUserWeapon,
   getUserWeapon,

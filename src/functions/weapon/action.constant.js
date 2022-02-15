@@ -15,3 +15,11 @@ exports.findWeaponLevel = 'findWeaponLevel';
 exports.findAllWeaponLevel = 'findAllWeaponLevel';
 exports.deleteWeaponLevel = 'deleteWeaponLevel';
 exports.modifyWeaponLevel = 'modifyWeaponLevel';
+
+exports.createUserWeapon = 'createUserWeapon';
+exports.findUserWeapon = 'findWeapon';
+exports.findAllUserWeapon = 'findAllUserWeapon';
+exports.deleteUserWeapon = 'deleteUserWeapon';
+exports.modifyUsereapon = 'modifyUsereapon';
+
+exports.getAllWeaponOfUser = 'getAllWeaponOfUser';
