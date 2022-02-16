@@ -146,7 +146,6 @@ async function saveCharacter(requestBody) {
     },
   };
   const characterType = await dynamo.get(param).promise();
-  console.log(typeof characterType);
   if (!characterType) {
     body.message = 'characterType is not exist!';
     return buildResponse(400, body);
