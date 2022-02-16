@@ -86,7 +86,8 @@ exports.handler = async (event, context, callback) => {
       break;
     case equipUserCharacter:
       response = await userCharacterService.equipUserCharacter(
-        body.data.id
+        body.data.userId,
+        body.data.userCharacterId
       );
       break;
   }

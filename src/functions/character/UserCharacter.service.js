@@ -100,10 +100,11 @@ async function modifyUserCharacter(userCharacterId, updateKey, updateValue) {
     );
 }
 
-async function equipUserCharacter(userCharacterId) {
+async function equipUserCharacter(userId, userCharacterId) {
   var params = {
     TableName: table.userCharacter,
     Key: {
+      "user_id": userId,
       "is_equipped": true
     },
     UpdateExpression: "set info.rating = :r",
