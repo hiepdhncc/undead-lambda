@@ -101,19 +101,18 @@ async function modifyUserCharacter(userCharacterId, updateKey, updateValue) {
 }
 
 async function equipUserCharacter(userId, userCharacterId) {
-  var params = {
+  const params = {
     TableName: table.userCharacter,
     Key: {
       "user_id": userId,
       "is_equipped": true
     },
-    UpdateExpression: "set info.rating = :r",
-    ExpressionAttributeValues: {
-      ":r": false,
-    },
-    ReturnValues: "UPDATED_NEW"
   };
-  await dynamo.update(params).promise();
+  const equippedUserCharacter = await scanDynamoRecords(params, []);
+  if (equippedUserCharacter != []) {
+    const id = equippedUserCharacter[0].id
+    await modifyUserCharacter(id, "is_equipped", false);
+  }
   return await modifyUserCharacter(userCharacterId, "is_equipped", true)
 }
 
