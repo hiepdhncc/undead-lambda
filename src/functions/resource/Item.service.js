@@ -1,8 +1,12 @@
 const dynamo = require('./dynamo.config');
 const table = require('./table.constant');
 const { v4: uuid } = require('uuid');
+const _ = require('lodash');
 
 async function getItem(itemId) {
+  let body = {
+    message: 'No item match!',
+  };
   const params = {
     TableName: table.item,
     Key: {
@@ -14,10 +18,18 @@ async function getItem(itemId) {
     .promise()
     .then(
       response => {
-        return buildResponse(200, response.item);
+        if (_.isEmpty(response)) {
+          return buildResponse(404, body);
+        }
+        body = {
+          message: 'SUCCESS',
+          item: response.Item,
+        };
+        return buildResponse(200, body);
       },
       err => {
-        console.error('Err...: ', err);
+        body.message = err.message;
+        return buildResponse(400, body);
       }
     );
 }
@@ -25,9 +37,9 @@ async function getItem(itemId) {
 async function scanDynamoRecords(scanParams, arrayItem) {
   try {
     const data = await dynamo.scan(scanParams).promise();
-    arrayItem = arrayItem.concat(data.items);
-    if (data.LastEvaluateKey) {
-      scanParams.ExclusiveStartKey = data.LastEvaluateKey;
+    arrayItem = arrayItem.concat(data.Items);
+    if (data.LastEvaluatedKey) {
+      scanParams.ExclusiveStartKey = data.LastEvaluatedKey;
       return await scanDynamoRecords(scanParams, arrayItem);
     }
     return arrayItem;
@@ -37,17 +49,28 @@ async function scanDynamoRecords(scanParams, arrayItem) {
 }
 
 async function getItems() {
+  let body = {
+    message: 'SUCCESS',
+    itemTypes: [],
+  };
   const params = {
     TableName: table.item,
   };
   const allItems = await scanDynamoRecords(params, []);
-  const body = {
-    items: allItems,
-  };
+  body.items = allItems;
   return buildResponse(200, body);
 }
 
 async function modifyItem(itemId, updateKey, updateValue) {
+  let body = {
+    message: 'FAILED',
+  };
+  const item = await dynamo.get({
+    TableName: table.item,
+    Key : {id : itemId}
+  }).promise();
+  if(_.isEmpty(item))
+    return buildResponse(400, body);
   const params = {
     TableName: table.item,
     Key: {
@@ -64,20 +87,29 @@ async function modifyItem(itemId, updateKey, updateValue) {
     .promise()
     .then(
       response => {
-        const body = {
-          operation: 'UPDATE',
-          message: 'SUCCESS',
-          updatedAttributes: response,
+        if (!response.Attributes) {
+          body = {
+            message: 'Cannot modify item that does not exist!',
+          };
+          return buildResponse(404, body);
+        }
+        body = {
+          message: 'SUCCESS!',
+          updatedAttributes: response.Attributes,
         };
         return buildResponse(200, body);
       },
       error => {
-        console.error('Do your custom error handling here. I am just gonna log it: ', error);
+        body.message = error.message;
+        return buildResponse(400, body);
       }
     );
 }
 
 async function deleteItem(itemId) {
+  let body = {
+    message: 'FAILED',
+  };
   const params = {
     TableName: table.item,
     Key: {
@@ -90,20 +122,37 @@ async function deleteItem(itemId) {
     .promise()
     .then(
       response => {
-        const body = {
-          operation: 'DELETE',
+        if (!response.Attributes) {
+          body = {
+            message: 'Cannot delete item that does not exist',
+          };
+          return buildResponse(404, body);
+        }
+        body = {
           message: 'SUCCESS',
-          item: response,
+          item: response.Attributes,
         };
         return buildResponse(200, body);
       },
       error => {
-        console.error('Do your custom error handling here. I am just gonna log it: ', error);
+        body.message = error.message;
+        return buildResponse(400, body);
       }
     );
 }
 
 async function saveItem(requestBody) {
+  let body = {
+    message: 'Failed',
+  };
+  const type = await dynamo.get({
+    TableName: table.itemType,
+    Key: {
+      id: requestBody.itemTypeId
+    }
+  }).promise();
+  if(_.isEmpty(type))
+    return buildResponse(400, body);
   const params = {
     TableName: table.item,
     Item: {
@@ -117,15 +166,15 @@ async function saveItem(requestBody) {
     .promise()
     .then(
       () => {
-        const body = {
-          operation: 'SAVE',
+        body = {
           message: 'SUCCESS',
           item: params.Item,
         };
         return buildResponse(200, body);
       },
       error => {
-        console.error('Do your custom error handling here. I am just gonna log it: ', error);
+        body.message = error.message;
+        return buildResponse(400, body);
       }
     );
 }
@@ -136,7 +185,7 @@ function buildResponse(statusCode, body) {
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(body),
+    body: body,
   };
 }
 

@@ -23,7 +23,7 @@ async function getCharacterType(characterTypeId) {
         }
         body = {
           message: 'SUCCESS',
-          item: response,
+          item: response.Item,
         };
         return buildResponse(200, body);
       },

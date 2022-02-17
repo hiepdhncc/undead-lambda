@@ -1,6 +1,7 @@
 const dynamo = require('./dynamo.config');
 const table = require('./table.constant');
 const { v4: uuid } = require('uuid');
+const _ = require('lodash');
 
 async function getItemType(itemTypeId) {
   let body = {
@@ -22,7 +23,7 @@ async function getItemType(itemTypeId) {
         }
         body = {
           message: 'SUCCESS',
-          item: response,
+          item: response.Item,
         };
         return buildResponse(200, body);
       },
@@ -36,9 +37,9 @@ async function getItemType(itemTypeId) {
 async function scanDynamoRecords(scanParams, arrayItem) {
   try {
     const data = await dynamo.scan(scanParams).promise();
-    arrayItem = arrayItem.concat(data.items);
-    if (data.LastEvaluateKey) {
-      scanParams.ExclusiveStartKey = data.LastEvaluateKey;
+    arrayItem = arrayItem.concat(data.Items);
+    if (data.LastEvaluatedKey) {
+      scanParams.ExclusiveStartKey = data.LastEvaluatedKey;
       return await scanDynamoRecords(scanParams, arrayItem);
     }
     return arrayItem;
@@ -88,7 +89,7 @@ async function modifyItemType(itemTypeId, updateKey, updateValue) {
         }
         body = {
           message: 'SUCCESS!',
-          updatedAttributes: response,
+          updatedAttributes: response.Attributes,
         };
         return buildResponse(200, body);
       },
@@ -123,7 +124,7 @@ async function deleteItemType(itemTypeId) {
         }
         body = {
           message: 'SUCCESS',
-          item: response,
+          item: response.Attributes,
         };
         return buildResponse(200, body);
       },
@@ -143,8 +144,7 @@ async function saveItemType(requestBody) {
     Item: {
       id: uuid(),
       code: requestBody.code || '',
-      name: requestBody.name || '',
-      description: requestBody.description || '',
+      name: requestBody.name || ''
     },
   };
   return await dynamo
@@ -171,7 +171,7 @@ function buildResponse(statusCode, body) {
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(body),
+    body: body,
   };
 }
 

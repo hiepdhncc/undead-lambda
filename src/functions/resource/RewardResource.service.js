@@ -22,7 +22,7 @@ async function getRewardResource(rewardResourceId) {
         }
         body = {
           message: 'SUCCESS',
-          item: response,
+          item: response.Item,
         };
         return buildResponse(200, body);
       },
@@ -36,9 +36,9 @@ async function getRewardResource(rewardResourceId) {
 async function scanDynamoRecords(scanParams, arrayItem) {
   try {
     const data = await dynamo.scan(scanParams).promise();
-    arrayItem = arrayItem.concat(data.items);
-    if (data.LastEvaluateKey) {
-      scanParams.ExclusiveStartKey = data.LastEvaluateKey;
+    arrayItem = arrayItem.concat(data.Items);
+    if (data.LastEvaluatedKey) {
+      scanParams.ExclusiveStartKey = data.LastEvaluatedKey;
       return await scanDynamoRecords(scanParams, arrayItem);
     }
     return arrayItem;
@@ -88,7 +88,7 @@ async function modifyRewardResource(rewardResourceId, updateKey, updateValue) {
         }
         body = {
           message: 'SUCCESS!',
-          updatedAttributes: response,
+          updatedAttributes: response.Attributes,
         };
         return buildResponse(200, body);
       },
@@ -123,7 +123,7 @@ async function deleteRewardResource(rewardResourceId) {
         }
         body = {
           message: 'SUCCESS',
-          item: response,
+          item: response.Attributes,
         };
         return buildResponse(200, body);
       },
@@ -171,7 +171,7 @@ function buildResponse(statusCode, body) {
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(body),
+    body: body,
   };
 }
 
