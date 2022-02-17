@@ -116,6 +116,20 @@ async function equipUserCharacter(userId, userCharacterId) {
   return await modifyUserCharacter(userCharacterId, "is_equipped", true)
 }
 
+async function initUserCharacter(userId) {
+  const params = {
+    TableName: table.character,
+  };
+  const characters = await scanDynamoRecords(params, []);
+  for (let character of characters) {
+    let body = {
+      userId,
+      characterId: character.id
+    }
+    await saveUserCharacter(body);
+  }
+}
+
 async function deleteUserCharacter(userCharacterId) {
   let body = {
     message: 'FAILED',
@@ -209,5 +223,6 @@ module.exports = {
   getUserCharacter,
   getUserCharacters,
   modifyUserCharacter,
-  equipUserCharacter
+  equipUserCharacter,
+  initUserCharacter
 };

@@ -15,6 +15,7 @@ const {
   deleteUserCharacter,
   modifyUserCharacter,
   equipUserCharacter,
+  initUserCharacter
 } = require('./action.constant');
 
 const characterTypeService = require('./CharacterType.service');
@@ -88,6 +89,11 @@ exports.handler = async (event, context, callback) => {
       response = await userCharacterService.equipUserCharacter(
         body.data.userId,
         body.data.userCharacterId
+      );
+      break;
+    case initUserCharacter:
+      response = await userCharacterService.initUserCharacter(
+        body.data.userId
       );
       break;
   }
