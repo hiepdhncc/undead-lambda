@@ -62,6 +62,9 @@ async function getUserCharacters() {
 }
 
 async function modifyUserCharacter(userCharacterId, updateKey, updateValue) {
+  let body = {
+    message: 'FAILED',
+  };
   const params = {
     TableName: table.userCharacter,
     Key: {
@@ -95,6 +98,36 @@ async function modifyUserCharacter(userCharacterId, updateKey, updateValue) {
         return buildResponse(400, body);
       }
     );
+}
+
+async function equipUserCharacter(userId, userCharacterId) {
+  const params = {
+    TableName: table.userCharacter,
+    Key: {
+      "user_id": userId,
+      "is_equipped": true
+    },
+  };
+  const equippedUserCharacter = await scanDynamoRecords(params, []);
+  if (equippedUserCharacter != []) {
+    const id = equippedUserCharacter[0].id
+    await modifyUserCharacter(id, "is_equipped", false);
+  }
+  return await modifyUserCharacter(userCharacterId, "is_equipped", true)
+}
+
+async function initUserCharacter(userId) {
+  const params = {
+    TableName: table.character,
+  };
+  const characters = await scanDynamoRecords(params, []);
+  for (let character of characters) {
+    let body = {
+      userId,
+      characterId: character.id
+    }
+    await saveUserCharacter(body);
+  }
 }
 
 async function deleteUserCharacter(userCharacterId) {
@@ -134,22 +167,26 @@ async function deleteUserCharacter(userCharacterId) {
 
 async function saveUserCharacter(requestBody) {
   let body = {
-    message: 'Failed',
+    message: 'FAILED',
   };
-  const character = await dynamo.get({
+  const param = {
     TableName: table.character,
-    Key: requestBody.characterId,
-  });
-  if (!character.Attributes) {
+    Key: {
+      id: requestBody.characterId,
+    },
+  };
+  const character = await dynamo.get(param).promise();
+  if (!character) {
     body.message = 'character is not exist!';
     return buildResponse(400, body);
   }
   const params = {
-    TableName: table.userUserCharacter,
+    TableName: table.userCharacter,
     Item: {
       id: uuid(),
       user_id: requestBody.userId || '',
       character_id: requestBody.characterId || '',
+      is_equipped: false
     },
   };
   return await dynamo
@@ -186,4 +223,6 @@ module.exports = {
   getUserCharacter,
   getUserCharacters,
   modifyUserCharacter,
+  equipUserCharacter,
+  initUserCharacter
 };
