@@ -2,6 +2,7 @@ const dynamo = require('./dynamo.config');
 const table = require('./table.constant');
 const { v4: uuid } = require('uuid');
 const _ = require('lodash');
+const { characterRarityEnum } = require('./action.constant')
 
 async function getUserCharacter(userCharacterId) {
   let body = {
@@ -124,10 +125,15 @@ async function initUserCharacter(userId) {
   for (let character of characters) {
     let body = {
       userId,
-      characterId: character.id
+      characterId: character.id,
+      rarity: character.rarity
     }
     await saveUserCharacter(body);
   }
+}
+
+async function unlockUserCharacter(userCharacterId) {
+  return await modifyUserCharacter(userCharacterId, "is_locked", false)
 }
 
 async function deleteUserCharacter(userCharacterId) {
@@ -186,7 +192,8 @@ async function saveUserCharacter(requestBody) {
       id: uuid(),
       user_id: requestBody.userId || '',
       character_id: requestBody.characterId || '',
-      is_equipped: false
+      is_equipped: false,
+      is_locked: requestBody.rarity != characterRarityEnum.normal
     },
   };
   return await dynamo

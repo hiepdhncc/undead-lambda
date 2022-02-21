@@ -18,3 +18,9 @@ exports.equipUserCharacter = 'equipUserCharacter';
 exports.modifyUserCharacter = 'modifyUserCharacter';
 exports.initUserCharacter = 'initUserCharacter';
 exports.test = 'test';
+
+export const characterRarityEnum = {
+  normal: 'normal',
+  epic: 'epic',
+  legendary: 'legendary'
+}

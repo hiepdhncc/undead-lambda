@@ -2,6 +2,7 @@ const { v4: uuid } = require('uuid');
 const dynamo = require('./dynamo.config');
 const table = require('./table.constant');
 const _ = require('lodash');
+const { characterRarityEnum } = require('./action.constant');
 
 async function getCharacter(characterId) {
   let body = {
@@ -162,6 +163,7 @@ async function saveCharacter(requestBody) {
       sprint_speed: parseFloat(requestBody.sprintSpeed) || 0.0,
       cross_speed: parseFloat(requestBody.crossSpeed) || 0.0,
       backward_speed: parseFloat(requestBody.backwardSpeed) || 0.0,
+      rarity: requestBody.rarity || characterRarityEnum.normal,
     },
   };
   return await dynamo
