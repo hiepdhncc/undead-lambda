@@ -149,9 +149,8 @@ async function saveUserWeapon(requestBody) {
     Item: {
       id: uuid(),
       user_id: requestBody.userId || '',
-      weapon_id: requestBody.weaponId || '',
       weapon_level_id: requestBody.weaponLevelId || '',
-      progress: requestBody.progress || '',
+      is_iquipped: requestBody.is_iquipped || '',
     },
   };
   console.log(params.Item);
@@ -248,51 +247,11 @@ async function getWeaponDetail(userId, weaponLevelId) {
       },
     })
     .promise();
-  const wp = await dynamo
+  const skin = await dynamo
     .get({
-      TableName: table.weapon,
+      TableName: table.skin,
       Key: {
-        id: userWeapon[0].weapon_id,
-      },
-    })
-    .promise();
-  const weapon = {
-    progress: userWeapon.progress,
-    name: `${wp.name} - ${wp.code}`,
-    level: weaponLevel.level,
-  };
-  body = {
-    message: 'success',
-    weapon,
-  };
-  return buildResponse(200, body);
-}
-async function upgradeWeaponLevel(userId, weaponLevelId) {
-  let body = {
-    message: 'Failed',
-  };
-  const userWeapon = await scanDynamoRecords(
-    {
-      TableName: table.userWeapon,
-      ScanFilter: {
-        user_id: {
-          AttributeValueList: { S: userId },
-          ComparisonOperator: 'EQ',
-        },
-        weapon_level_id: {
-          AttributeValueList: { S: weaponLevelId },
-          ComparisonOperator: 'EQ',
-        },
-      },
-    },
-    []
-  );
-  if (userWeapon.length === 0) return buildResponse(404, body);
-  const weaponLevel = await dynamo
-    .get({
-      TableName: table.weaponLevel,
-      Key: {
-        id: weaponLevelId,
+        id: weaponLevel.skin_id,
       },
     })
     .promise();
@@ -308,6 +267,10 @@ async function upgradeWeaponLevel(userId, weaponLevelId) {
     progress: userWeapon.progress,
     name: `${wp.name} - ${wp.code}`,
     level: weaponLevel.level,
+    skin : skin.Item,
+    range: weaponLevel.range,
+    acuracy:1,
+    fireRate:1
   };
   body = {
     message: 'success',
@@ -315,6 +278,55 @@ async function upgradeWeaponLevel(userId, weaponLevelId) {
   };
   return buildResponse(200, body);
 }
+
+// async function upgradeWeaponLevel(userId, weaponLevelId) {
+//   let body = {
+//     message: 'Failed',
+//   };
+//   const userWeapon = await scanDynamoRecords(
+//     {
+//       TableName: table.userWeapon,
+//       ScanFilter: {
+//         user_id: {
+//           AttributeValueList: { S: userId },
+//           ComparisonOperator: 'EQ',
+//         },
+//         weapon_level_id: {
+//           AttributeValueList: { S: weaponLevelId },
+//           ComparisonOperator: 'EQ',
+//         },
+//       },
+//     },
+//     []
+//   );
+//   if (userWeapon.length === 0) return buildResponse(404, body);
+//   const weaponLevel = await dynamo
+//     .get({
+//       TableName: table.weaponLevel,
+//       Key: {
+//         id: weaponLevelId,
+//       },
+//     })
+//     .promise();
+//   const wp = await dynamo
+//     .get({
+//       TableName: table.weapon,
+//       Key: {
+//         id: userWeapon[0].weapon_id,
+//       },
+//     })
+//     .promise();
+//   const weapon = {
+//     progress: userWeapon.progress,
+//     name: `${wp.name} - ${wp.code}`,
+//     level: weaponLevel.level,
+//   };
+//   body = {
+//     message: 'success',
+//     weapon,
+//   };
+//   return buildResponse(200, body);
+// }
 
 module.exports = {
   getAllWeaponOfUser,
