@@ -151,10 +151,10 @@ async function saveCharacterType(requestBody) {
       name: requestBody.name || '',
       code: requestBody.code || '',
       nickname: requestBody.nickname || '',
-      description: requestBody.description || '',
+      information: requestBody.information || '',
+      // description: requestBody.description || '',
     },
   };
-  console.log(params.Item);
   return await dynamo
     .put(params)
     .promise()

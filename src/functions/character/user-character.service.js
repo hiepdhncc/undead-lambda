@@ -49,16 +49,19 @@ async function scanDynamoRecords(scanParams, arrayItem) {
   }
 }
 
-async function getUserCharacters() {
+async function getUserCharacters(userId) {
   let body = {
     message: 'SUCCESS',
     characterTypes: [],
   };
   const params = {
     TableName: table.userCharacter,
+    Key: {
+      "user_id": userId
+    },
   };
-  const allUserCharacters = await scanDynamoRecords(params, []);
-  body.userCharacters = allUserCharacters;
+  const userCharacters = await scanDynamoRecords(params, []);
+  body.userCharacters = userCharacters;
   return buildResponse(200, body);
 }
 
@@ -126,7 +129,8 @@ async function initUserCharacter(userId) {
     let body = {
       userId,
       characterId: character.id,
-      rarity: character.rarity
+      is_equipped: false,
+      is_locked: character.rarity != characterRarityEnum.normal
     }
     await saveUserCharacter(body);
   }

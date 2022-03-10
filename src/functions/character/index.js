@@ -73,7 +73,7 @@ exports.handler = async (event, context, callback) => {
       response = await userCharacterService.getUserCharacter(body.data.id);
       break;
     case findAllUserCharacter:
-      response = await userCharacterService.getUserCharacters();
+      response = await userCharacterService.getUserCharacters(body.data.userId);
       break;
     case deleteUserCharacter:
       response = await userCharacterService.deleteUserCharacter(body.data.id);
