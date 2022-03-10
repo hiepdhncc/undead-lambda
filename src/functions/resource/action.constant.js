@@ -39,3 +39,4 @@ exports.findUserReward = 'findUserReward';
 exports.findAllUserReward = 'findAllUserReward';
 exports.deleteUserReward = 'deleteUserReward';
 exports.modifyUserReward = 'modifyUserReward';
+exports.claimResource = 'claimResource';

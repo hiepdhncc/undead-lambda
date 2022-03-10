@@ -24,3 +24,4 @@ exports.modifyUsereapon = 'modifyUsereapon';
 
 exports.getAllWeaponOfUser = 'getAllWeaponOfUser';
 exports.getWeaponDetail = 'getWeaponDetail';
+exports.claimSkin = 'claimSkin';

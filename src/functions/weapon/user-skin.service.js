@@ -1,15 +1,16 @@
 const dynamo = require('./dynamo.config');
 const table = require('./table.constant');
 const { v4: uuid } = require('uuid');
+const _ = require('lodash');
 
-async function getWeaponType(WeaponTypeId) {
+async function getUserSkin(userSkinId) {
   let body = {
     message: 'No item match!',
   };
   const params = {
-    TableName: table.weaponType,
+    TableName: table.userSkin,
     Key: {
-      id: WeaponTypeId,
+      id: userSkinId,
     },
   };
   return await dynamo
@@ -36,7 +37,7 @@ async function getWeaponType(WeaponTypeId) {
 async function scanDynamoRecords(scanParams, arrayItem) {
   try {
     const data = await dynamo.scan(scanParams).promise();
-    arrayItem = arrayItem.concat(data.items);
+    arrayItem = arrayItem.concat(data.Items);
     if (data.LastEvaluateKey) {
       scanParams.ExclusiveStartKey = data.LastEvaluateKey;
       return await scanDynamoRecords(scanParams, arrayItem);
@@ -47,27 +48,27 @@ async function scanDynamoRecords(scanParams, arrayItem) {
   }
 }
 
-async function getWeaponTypes() {
+async function getUserSkins() {
   let body = {
     message: 'SUCCESS',
-    weaponTypes: [],
+    userSkins: [],
   };
   const params = {
-    TableName: table.weaponType,
+    TableName: table.userSkin,
   };
-  const allWeaponTypes = await scanDynamoRecords(params, []);
-  body.weaponTypes = allWeaponTypes;
+  const allUserSkins = await scanDynamoRecords(params, []);
+  body.userSkins = allUserSkins;
   return buildResponse(200, body);
 }
 
-async function modifyWeaponType(weaponTypeId, updateKey, updateValue) {
+async function modifyUserSkin(userSkinId, updateKey, updateValue) {
   let body = {
     message: 'FAILED',
   };
   const params = {
-    TableName: table.weaponType,
+    TableName: table.userSkin,
     Key: {
-      id: weaponTypeId,
+      id: userSkinId,
     },
     UpdateExpression: `set ${updateKey} = :value`,
     ExpressionAttributeValues: {
@@ -99,14 +100,14 @@ async function modifyWeaponType(weaponTypeId, updateKey, updateValue) {
     );
 }
 
-async function deleteWeaponType(weaponTypeId) {
+async function deleteUserSkin(userSkinId) {
   let body = {
     message: 'FAILED',
   };
   const params = {
-    TableName: table.weaponType,
+    TableName: table.userSkin,
     Key: {
-      id: weaponTypeId,
+      id: userSkinId,
     },
     ReturnValues: 'ALL_OLD',
   };
@@ -134,16 +135,16 @@ async function deleteWeaponType(weaponTypeId) {
     );
 }
 
-async function saveWeaponType(requestBody) {
+async function saveUserSkin(requestBody) {
   let body = {
     message: 'Failed',
   };
   const params = {
-    TableName: table.weaponType,
+    TableName: table.userSkin,
     Item: {
       id: uuid(),
-      code: requestBody.code || '',
-      name: requestBody.name || '',
+      user_id: requestBody.userId || '',
+      skin_id: requestBody.skinId || '',
     },
   };
   return await dynamo
@@ -173,11 +174,39 @@ function buildResponse(statusCode, body) {
     body: JSON.stringify(body),
   };
 }
+async function claimSkin(userId, skinId) {
+  let body = {
+    message: 'Failed',
+  };
+  // check user exist?
+
+  const params = {
+    TableName: table.userSkin,
+    FilterExpression: 'user_id = :userId AND skin_id = :skinId',
+    ExpressionAttributeValues: {
+      ':userId': userId,
+      ':skinId': skinId,
+    },
+  };
+  const userSkins = await scanDynamoRecords(params, []);
+  console.log(userSkins.length, 'HH');
+  if (userSkins.length > 0) {
+    return buildResponse(400, body);
+  }
+  const userSkin = {
+    userId,
+    skinId,
+  };
+  await saveUserSkin(userSkin);
+  body.message = 'Success!';
+  return buildResponse(200, body);
+}
 
 module.exports = {
-  saveWeaponType,
-  deleteWeaponType,
-  getWeaponType,
-  getWeaponTypes,
-  modifyWeaponType,
+  saveUserSkin,
+  deleteUserSkin,
+  getUserSkins,
+  getUserSkin,
+  modifyUserSkin,
+  claimSkin,
 };

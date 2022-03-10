@@ -1,6 +1,7 @@
 const dynamo = require('./dynamo.config');
 const table = require('./table.constant');
 const { v4: uuid } = require('uuid');
+const _ = require('lodash');
 
 async function getUserResource(userResourceId) {
   let body = {
@@ -37,8 +38,8 @@ async function scanDynamoRecords(scanParams, arrayItem) {
   try {
     const data = await dynamo.scan(scanParams).promise();
     arrayItem = arrayItem.concat(data.Items);
-    if (data.LastEvaluatedKey) {
-      scanParams.ExclusiveStartKey = data.LastEvaluatedKey;
+    if (data.LastEvaluateKey) {
+      scanParams.ExclusiveStartKey = data.LastEvaluateKey;
       return await scanDynamoRecords(scanParams, arrayItem);
     }
     return arrayItem;
@@ -175,10 +176,44 @@ function buildResponse(statusCode, body) {
   };
 }
 
+async function claimResource(userId, resourceId, amount) {
+  let body = {
+    message: 'Failed',
+  };
+  const params = {
+    TableName: table.userResource,
+    FilterExpression: 'user_id = :userId and resource_id = :resourceId',
+    ExpressionAttributeValues: {
+      ':userId': userId,
+      ':resourceId': resourceId,
+    },
+  };
+
+  const userResources = await scanDynamoRecords(params, []);
+  if (userResources && userResources.length > 0) {
+    console.log(typeof (amount + userResources[0].amount), 'TEST');
+    console.log(typeof 7, 'TEST');
+
+    return await modifyUserResource(
+      userResources[0].id,
+      'amount',
+      amount + userResources[0].amount
+    );
+  } else {
+    const userResource = {
+      userId,
+      resourceId,
+      amount: amount,
+    };
+    return await saveUserResource(userResource);
+  }
+}
+
 module.exports = {
   saveUserResource,
   deleteUserResource,
   getUserResource,
   getUserResources,
   modifyUserResource,
+  claimResource,
 };
