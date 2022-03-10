@@ -34,10 +34,12 @@ const {
   findAllUserReward,
   deleteUserReward,
   modifyUserReward,
+  claimResource,
 } = require('./action.constant');
 
-const userResourceService = require('./UserResource.service');
-const userRewardService = require('./UserReward.service');
+const userResourceService = require('./user-resource.service');
+const userRewardService = require('./user-reward.service');
+
 const resourceService = require('./Resource.service');
 const rewardService = require('./Reward.service');
 const rewardResourceService = require('./RewardResource.service');
@@ -49,50 +51,12 @@ console.log('Loading function');
 exports.handler = async (event, context, callback) => {
   console.log('Received event:', JSON.stringify(event, null, 2));
 
-  const body = event.Records[0].body;
+  const body = JSON.parse(event.Records[0].body);
   let response = {
-    statusCode: '400',
+    statusCode: '500',
     message: 'something wrong!',
   };
   switch (body.action) {
-    case createItem:
-      response = await itemService.saveItem(body.data);
-      break;
-    case findItem:
-      response = await itemService.getItem(body.data.id);
-      break;
-    case findAllItem:
-      response = await itemService.getItems();
-      break;
-    case deleteItem:
-      response = await itemService.deleteItem(body.data.id);
-      break;
-    case modifyItem:
-      response = await itemService.modifyItem(
-        body.data.id,
-        body.data.updateKey,
-        body.data.updateValue
-      );
-      break;
-    case createItemType:
-      response = await itemTypeService.saveItemType(body.data);
-      break;
-    case findItemType:
-      response = await itemTypeService.getItemType(body.data.id);
-      break;
-    case findAllItemType:
-      response = await itemTypeService.getItemTypes();
-      break;
-    case deleteItemType:
-      response = await itemTypeService.deleteItemType(body.data.id);
-      break;
-    case modifyItemType:
-      response = await itemTypeService.modifyItemType(
-        body.data.id,
-        body.data.updateKey,
-        body.data.updateValue
-      );
-      break;
     case createResource:
       response = await resourceService.saveResource(body.data);
       break;
@@ -187,6 +151,13 @@ exports.handler = async (event, context, callback) => {
         body.data.updateKey,
         body.data.updateValue
       );
+      break;
+    case claimResource:
+      response = await userResourceService.claimResource(
+        body.data.userId,
+        body.data.resourceId,
+        body.data.value
+        );
       break;
   }
   return response;
