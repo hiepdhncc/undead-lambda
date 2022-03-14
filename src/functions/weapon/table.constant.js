@@ -1,5 +1,5 @@
-const userWeapon = "user-weapon"; 
-const userSkin = "user-skin"; 
+const userWeapon = "user_weapon"; 
+const userSkin = "user_skin"; 
 
 module.exports = {
   userWeapon,

@@ -1,29 +1,4 @@
 const {
-  createItemType,
-  findItemType,
-  findAllItemType,
-  deleteItemType,
-  modifyItemType,
-  findItem,
-  modifyItem,
-  deleteItem,
-  findAllItem,
-  createItem,
-  createResource,
-  findResource,
-  findAllResource,
-  deleteResource,
-  modifyResource,
-  createReward,
-  findReward,
-  findAllReward,
-  deleteReward,
-  modifyReward,
-  createRewardResource,
-  findRewardResource,
-  findAllRewardResource,
-  deleteRewardResource,
-  modifyRewardResource,
   createUserResource,
   findUserResource,
   findAllUserResource,
@@ -40,12 +15,6 @@ const {
 const userResourceService = require('./user-resource.service');
 const userRewardService = require('./user-reward.service');
 
-const resourceService = require('./Resource.service');
-const rewardService = require('./Reward.service');
-const rewardResourceService = require('./RewardResource.service');
-const itemService = require('./Item.service');
-const itemTypeService = require('./ItemType.service');
-
 console.log('Loading function');
 
 exports.handler = async (event, context, callback) => {
@@ -57,63 +26,6 @@ exports.handler = async (event, context, callback) => {
     message: 'something wrong!',
   };
   switch (body.action) {
-    case createResource:
-      response = await resourceService.saveResource(body.data);
-      break;
-    case findResource:
-      response = await resourceService.getResource(body.data.id);
-      break;
-    case findAllResource:
-      response = await resourceService.getResources();
-      break;
-    case deleteResource:
-      response = await resourceService.deleteResource(body.data.id);
-      break;
-    case modifyResource:
-      response = await resourceService.modifyResource(
-        body.data.id,
-        body.data.updateKey,
-        body.data.updateValue
-      );
-      break;
-    case createReward:
-      response = await rewardService.saveReward(body.data);
-      break;
-    case findReward:
-      response = await rewardService.getReward(body.data.id);
-      break;
-    case findAllReward:
-      response = await rewardService.getRewards();
-      break;
-    case deleteReward:
-      response = await rewardService.deleteReward(body.data.id);
-      break;
-    case modifyReward:
-      response = await rewardService.modifyReward(
-        body.data.id,
-        body.data.updateKey,
-        body.data.updateValue
-      );
-      break;
-    case createRewardResource:
-      response = await rewardResourceService.saveRewardResource(body.data);
-      break;
-    case findRewardResource:
-      response = await rewardResourceService.getRewardResource(body.data.id);
-      break;
-    case findAllRewardResource:
-      response = await rewardResourceService.getRewardResources();
-      break;
-    case deleteRewardResource:
-      response = await rewardResourceService.deleteRewardResource(body.data.id);
-      break;
-    case modifyRewardResource:
-      response = await rewardResourceService.modifyRewardResource(
-        body.data.id,
-        body.data.updateKey,
-        body.data.updateValue
-      );
-      break;
     case createUserResource:
       response = await userResourceService.saveUserResource(body.data);
       break;
@@ -156,8 +68,8 @@ exports.handler = async (event, context, callback) => {
       response = await userResourceService.claimResource(
         body.data.userId,
         body.data.resourceId,
-        body.data.value
-        );
+        body.data.amount
+      );
       break;
   }
   return response;

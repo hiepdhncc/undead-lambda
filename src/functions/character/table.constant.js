@@ -1,6 +1,6 @@
-const characterType = "character-type"; 
+const characterType = "character_type"; 
 const character = "character"; 
-const userCharacter = "user-character"; 
+const userCharacter = "user_character"; 
 
 module.exports = {
   characterType,

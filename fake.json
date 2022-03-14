@@ -1,0 +1,18 @@
+[
+  {
+    "queue": "weapon",
+    "action": "purchaseWeapon",
+    "data": {
+      "userId": "1dbc6ce6-2a59-47b9-a7ad-2d71ce3c0071",
+      "weaponId": "3d600560-fe4b-4cdb-8902-a39b84344886"
+    }
+  },
+  {
+    "queue": "weapon",
+    "action": "upgradeWeapon",
+    "data": {
+      "userId": "1dbc6ce6-2a59-47b9-a7ad-2d71ce3c0071",
+      "weaponId": "3d600560-fe4b-4cdb-8902-a39b84344886"
+    }
+  }
+]

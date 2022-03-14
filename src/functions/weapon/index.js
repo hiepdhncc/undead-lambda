@@ -5,7 +5,9 @@ const {
   createUserSkin,
   modifyUserSkin,
   deleteUserSkin,
-  claimSkin,
+  purchaseWeapon,
+  upgradeWeapon,
+  purchaseSkin,
 } = require('./action.constant');
 
 const userWeaponService = require('./user-waepon.service');
@@ -48,9 +50,15 @@ exports.handler = async (event, context, callback) => {
         body.data.updateValue
       );
       break;
-      
-    case claimSkin:
-      response = await userSkinService.claimSkin(body.data.userId, body.data.skinId);
+
+    case purchaseSkin:
+      response = await userSkinService.purchaseSkin(body.data.userId, body.data.skinId);
+      break;
+    case purchaseWeapon:
+      response = await userWeaponService.purchaseWeapon(body.data.userId, body.data.weaponId);
+      break;
+    case upgradeWeapon:
+      response = await userWeaponService.upgradeWeapon(body.data.userId, body.data.weaponId);
       break;
   }
   return response;

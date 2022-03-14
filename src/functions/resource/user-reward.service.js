@@ -1,6 +1,7 @@
 const dynamo = require('./dynamo.config');
 const table = require('./table.constant');
 const { v4: uuid } = require('uuid');
+const _ = require('lodash');
 
 async function getUserReward(userRewardId) {
   let body = {
@@ -174,6 +175,42 @@ function buildResponse(statusCode, body) {
     body: body,
   };
 }
+
+// async function claimReward(userId, rewardId) {
+//   const params = {
+//     TableName: table.userReward,
+//     Key: {
+//       id: userRewardId,
+//     },
+//     UpdateExpression: `set ${updateKey} = :value`,
+//     ExpressionAttributeValues: {
+//       ':value': updateValue,
+//     },
+//     ReturnValues: 'UPDATED_NEW',
+//   };
+//   return await dynamo
+//     .update(params)
+//     .promise()
+//     .then(
+//       response => {
+//         if (!response.Attributes) {
+//           body = {
+//             message: 'Cannot modify item that does not exist!',
+//           };
+//           return buildResponse(404, body);
+//         }
+//         body = {
+//           message: 'SUCCESS!',
+//           updatedAttributes: response.Attributes,
+//         };
+//         return buildResponse(200, body);
+//       },
+//       error => {
+//         body.message = error.message;
+//         return buildResponse(400, body);
+//       }
+//     );
+// }
 
 module.exports = {
   saveUserReward,

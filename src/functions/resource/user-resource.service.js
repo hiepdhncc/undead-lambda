@@ -70,9 +70,9 @@ async function modifyUserResource(userResourceId, updateKey, updateValue) {
     Key: {
       id: userResourceId,
     },
-    UpdateExpression: `set ${updateKey} = :value`,
+    UpdateExpression: `set ${updateKey} = :v`,
     ExpressionAttributeValues: {
-      ':value': updateValue,
+      ':v': updateValue,
     },
     ReturnValues: 'UPDATED_NEW',
   };
@@ -145,7 +145,7 @@ async function saveUserResource(requestBody) {
       id: uuid(),
       resource_id: requestBody.resourceId || '',
       user_id: requestBody.userId || '',
-      value: requestBody.value || 0,
+      amount: requestBody.amount || 0,
     },
   };
   return await dynamo
@@ -177,9 +177,6 @@ function buildResponse(statusCode, body) {
 }
 
 async function claimResource(userId, resourceId, amount) {
-  let body = {
-    message: 'Failed',
-  };
   const params = {
     TableName: table.userResource,
     FilterExpression: 'user_id = :userId and resource_id = :resourceId',
@@ -191,9 +188,6 @@ async function claimResource(userId, resourceId, amount) {
 
   const userResources = await scanDynamoRecords(params, []);
   if (userResources && userResources.length > 0) {
-    console.log(typeof (amount + userResources[0].amount), 'TEST');
-    console.log(typeof 7, 'TEST');
-
     return await modifyUserResource(
       userResources[0].id,
       'amount',

@@ -2,6 +2,7 @@ const dynamo = require('./dynamo.config');
 const table = require('./table.constant');
 const { v4: uuid } = require('uuid');
 const _ = require('lodash');
+const client = require('./pg.config');
 
 async function getUserSkin(userSkinId) {
   let body = {
@@ -174,32 +175,47 @@ function buildResponse(statusCode, body) {
     body: JSON.stringify(body),
   };
 }
-async function claimSkin(userId, skinId) {
-  let body = {
-    message: 'Failed',
-  };
+async function purchaseSkin(userId, weaponSkinId) {
+  try {
+    client.connect();
+    const user = await client.query('select * from jhi_user where id = $1', [userId]);
+    const weaponSkin = await client.query('select * from weapon_skin where id = $1', [
+      weaponSkinId,
+    ]);
+    if(!user || !weaponSkin){
+      return;
+    } else {
+      await client.query('select * from weapon_skin where id = $1', [weaponSkinId]);
+      await client.query(`INSERT INTO user_weapon_skin(user_id, weapon_skin_id) VALUES($1,$2)`, [
+        userId,
+        weaponSkinId
+      ]);
+    }
+  } catch (err) {
+    console.log(err);
+  }
+
   // check user exist?
 
-  const params = {
-    TableName: table.userSkin,
-    FilterExpression: 'user_id = :userId AND skin_id = :skinId',
-    ExpressionAttributeValues: {
-      ':userId': userId,
-      ':skinId': skinId,
-    },
-  };
-  const userSkins = await scanDynamoRecords(params, []);
-  console.log(userSkins.length, 'HH');
-  if (userSkins.length > 0) {
-    return buildResponse(400, body);
-  }
-  const userSkin = {
-    userId,
-    skinId,
-  };
-  await saveUserSkin(userSkin);
-  body.message = 'Success!';
-  return buildResponse(200, body);
+  // const params = {
+  //   TableName: table.userSkin,
+  //   FilterExpression: 'user_id = :userId and skin_id = :skinId',
+  //   ExpressionAttributeValues: {
+  //     ':userId': userId,
+  //     ':skinId': skinId,
+  //   },
+  // };
+  // const userSkins = await scanDynamoRecords(params, []);
+  // if (userSkins && userSkins.length > 0) {
+  //   return buildResponse(400, body);
+  // }
+  // const userSkin = {
+  //   userId,
+  //   skinId,
+  // };
+  // await saveUserSkin(userSkin);
+  // body.message = 'Success!';
+  // return buildResponse(200, body);
 }
 
 module.exports = {
@@ -208,5 +224,5 @@ module.exports = {
   getUserSkins,
   getUserSkin,
   modifyUserSkin,
-  claimSkin,
+  purchaseSkin,
 };

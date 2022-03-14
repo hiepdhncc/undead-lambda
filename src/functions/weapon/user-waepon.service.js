@@ -2,6 +2,7 @@ const dynamo = require('./dynamo.config');
 const table = require('./table.constant');
 const { v4: uuid } = require('uuid');
 const _ = require('lodash');
+const client = require('./pg.config');
 
 async function getUserWeapon(userWeaponId) {
   let body = {
@@ -149,8 +150,8 @@ async function saveUserWeapon(requestBody) {
     Item: {
       id: uuid(),
       user_id: requestBody.userId || '',
+      weapon_id: requestBody.weaponId || '',
       weapon_level_id: requestBody.weaponLevelId || '',
-      is_iquipped: requestBody.is_iquipped || '',
     },
   };
   console.log(params.Item);
@@ -170,6 +171,54 @@ async function saveUserWeapon(requestBody) {
         return buildResponse(400, body);
       }
     );
+}
+
+async function purchaseWeapon(userId, weaponId) {
+  try {
+    client.connect();
+    const user = await client.query(`select * from jhi_user where login = $1`, [userId]);
+    const weapon = await client.query(`select * from weapon where id = $1`, [weaponId]);
+    if (!user.rows || !weapon.rows) {
+    } else {
+      const weaponId = weapon.rows[0].id;
+      const weaponLevel = await client.query(
+        `select * from weapon_level where weapon_id = $1 and level = 1`,
+        [weaponId]
+      );
+      await client.query(
+        `INSERT INTO user_weapon(user_id, weapon_id, weapon_level_id, locked) VALUES($1,$2,$3,$4)`,
+        [userId, weaponId, weaponLevel.rows[0].id, false]
+      );
+    }
+    client.end();
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+async function upgradeWeapon(userId, weaponId) {
+  try {
+    client.connect();
+    const userWeapon = await client.query(
+      `select * from user_weapon where user_id = $1 and weapon_id = $2`,
+      [userId, weaponId]
+    );
+    const currentWeaponLevel = await client.query(`select * from weapon_level where id = $1`, [
+      userWeapon.rows[0].weapon_level_id,
+    ]);
+    const nextWeaponLevel = await client.query(
+      `select * from weapon_level where weapon_id = $1 and level = $2`,
+      [weaponId, currentWeaponLevel.rows[0].level + 1]
+    );
+    await client.query(
+      `UPDATE user_weapon set weapon_level_id = $1 WHERE user_id = $2 and weapon_id = $3`,
+      [nextWeaponLevel.rows[0].id, userId, weaponId]
+    );
+
+    client.end();
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 function buildResponse(statusCode, body) {
@@ -267,10 +316,10 @@ async function getWeaponDetail(userId, weaponLevelId) {
     progress: userWeapon.progress,
     name: `${wp.name} - ${wp.code}`,
     level: weaponLevel.level,
-    skin : skin.Item,
+    skin: skin.Item,
     range: weaponLevel.range,
-    acuracy:1,
-    fireRate:1
+    acuracy: 1,
+    fireRate: 1,
   };
   body = {
     message: 'success',
@@ -278,55 +327,6 @@ async function getWeaponDetail(userId, weaponLevelId) {
   };
   return buildResponse(200, body);
 }
-
-// async function upgradeWeaponLevel(userId, weaponLevelId) {
-//   let body = {
-//     message: 'Failed',
-//   };
-//   const userWeapon = await scanDynamoRecords(
-//     {
-//       TableName: table.userWeapon,
-//       ScanFilter: {
-//         user_id: {
-//           AttributeValueList: { S: userId },
-//           ComparisonOperator: 'EQ',
-//         },
-//         weapon_level_id: {
-//           AttributeValueList: { S: weaponLevelId },
-//           ComparisonOperator: 'EQ',
-//         },
-//       },
-//     },
-//     []
-//   );
-//   if (userWeapon.length === 0) return buildResponse(404, body);
-//   const weaponLevel = await dynamo
-//     .get({
-//       TableName: table.weaponLevel,
-//       Key: {
-//         id: weaponLevelId,
-//       },
-//     })
-//     .promise();
-//   const wp = await dynamo
-//     .get({
-//       TableName: table.weapon,
-//       Key: {
-//         id: userWeapon[0].weapon_id,
-//       },
-//     })
-//     .promise();
-//   const weapon = {
-//     progress: userWeapon.progress,
-//     name: `${wp.name} - ${wp.code}`,
-//     level: weaponLevel.level,
-//   };
-//   body = {
-//     message: 'success',
-//     weapon,
-//   };
-//   return buildResponse(200, body);
-// }
 
 module.exports = {
   getAllWeaponOfUser,
@@ -336,4 +336,6 @@ module.exports = {
   getUserWeapons,
   modifyUserWeapon,
   getWeaponDetail,
+  purchaseWeapon,
+  upgradeWeapon,
 };
